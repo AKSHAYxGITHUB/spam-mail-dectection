@@ -1,0 +1,17 @@
+# Environments
+.env
+venv/
+env/
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/
+
+# Large Datasets & Models (Exceeding GitHub 100MB limit)
+spam.csv
+spam_model.pkl
+vectorizer.pkl
+*.csv
+*.zip

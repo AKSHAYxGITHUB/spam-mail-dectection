@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Spam Shield | Advanced Threat Detection</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #0f172a;
+            --surface: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --spam-color: #ef4444;
+            --safe-color: #10b981;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(239, 68, 68, 0.1) 0%, transparent 50%);
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 992px) {
+            .container.has-result {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        button.analyze-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button.analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        button.analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results Panel */
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+            gap: 15px;
+        }
+
+        .status-spam {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--spam-color);
+        }
+
+        .status-safe {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--safe-color);
+        }
+
+        /* Meter */
+        .confidence-meter {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .meter-bar-bg {
+            height: 12px;
+            background: #334155;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .meter-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .meter-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .fill-spam { background: linear-gradient(90deg, #f87171, #ef4444); }
+        .fill-safe { background: linear-gradient(90deg, #34d399, #10b981); }
+
+        .explanation, .highlight-box {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        .explanation h3, .highlight-box h3 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        .explanation p {
+            line-height: 1.6;
+        }
+
+        .highlight-spam {
+            background: rgba(239, 68, 68, 0.2);
+            border-bottom: 2px solid var(--spam-color);
+            padding: 0 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .keyword-tag {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Error */
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--spam-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-shield-halved"></i> AI Spam Shield</h1>
+        <p>Advanced Deep Learning Text Classification System</p>
+    </div>
+
+    <div class="container {% if result and not result.error %}has-result{% endif %}">
+        
+        <!-- Input Section -->
+        <div class="glass-card">
+            <form method="POST" class="input-group">
+                <label for="email_content">Suspicious Message Content</label>
+                <textarea name="email_content" id="email_content" placeholder="Paste the email or text message here for AI analysis..." required>{% if result %}{{ result.original_text or '' }}{% endif %}</textarea>
+                <button type="submit" class="analyze-btn">
+                    <i class="fa-solid fa-microchip"></i> Analyze with Neural Network
+                </button>
+            </form>
+            
+            {% if result and result.error %}
+                <div class="error-msg" style="margin-top: 15px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ result.error }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Results Section -->
+        {% if result and not result.error %}
+        <div class="results-panel">
+            
+            <!-- Verdict -->
+            {% if result.verdict == 'Spam' %}
+                <div class="status-header status-spam">
+                    <i class="fa-solid fa-radiation"></i> THREAT DETECTED: SPAM
+                </div>
+            {% else %}
+                <div class="status-header status-safe">
+                    <i class="fa-solid fa-check-shield"></i> MESSAGE SAFE
+                </div>
+            {% endif %}
+
+            <!-- Confidence Meter -->
+            <div class="confidence-meter glass-card" style="padding: 1.5rem;">
+                <div class="meter-label">
+                    <span>AI Confidence</span>
+                    <span style="color: {% if result.verdict == 'Spam' %}var(--spam-color){% else %}var(--safe-color){% endif %}">
+                        {{ "%.1f"|format(result.confidence) }}%
+                    </span>
+                </div>
+                <div class="meter-bar-bg">
+                    <div class="meter-bar-fill {% if result.verdict == 'Spam' %}fill-spam{% else %}fill-safe{% endif %}" 
+                         style="width: 0%;" data-target="{{ result.confidence }}"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>Safe</span>
+                    <span>Spam Probability: {{ "%.1f"|format(result.spam_probability) }}%</span>
+                </div>
+            </div>
+
+            <!-- Explanation -->
+            <div class="explanation">
+                <h3><i class="fa-solid fa-brain"></i> AI Reasoning</h3>
+                <p>{{ result.explanation }}</p>
+                {% if result.verdict == 'Spam' and result.top_words %}
+                <div class="tag-container">
+                    {% for word in result.top_words %}
+                        <span class="keyword-tag">{{ word.word }} ({{ "%.2f"|format(word.score) }})</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Highlighted Text -->
+            <div class="highlight-box">
+                <h3><i class="fa-solid fa-highlighter"></i> Trace Analysis</h3>
+                <p style="white-space: pre-wrap; color: #cbd5e1; font-size: 0.95rem;">{{ result.highlighted_text | safe }}</p>
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+        // Animate meter bars on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const meter = document.querySelector('.meter-bar-fill');
+            if (meter) {
+                setTimeout(() => {
+                    meter.style.width = meter.getAttribute('data-target') + '%';
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
