@@ -48,7 +48,7 @@ class ModelPipeline:
         print("Building Ensemble Model (Logistic Regression + Random Forest + XGBoost)...")
         # Initialize models
         lr = LogisticRegression(max_iter=1000, random_state=42)
-        rf = RandomForestClassifier(n_estimators=20, random_state=42, n_jobs=-1)
+        rf = RandomForestClassifier(n_estimators=20, max_depth=25, random_state=42, n_jobs=-1)
         xgb = XGBClassifier(eval_metric='logloss', random_state=42, n_jobs=-1, n_estimators=20)
 
         # Create Voting Ensemble
