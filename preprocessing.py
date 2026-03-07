@@ -7,18 +7,24 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 
 # Download required NLTK resources silently
+import os
+# Configure NLTK to use /tmp on Vercel
+if os.environ.get('VERCEL'):
+    nltk.data.path.append('/tmp/nltk_data')
+
+# Download required NLTK resources silently
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
-    nltk.download('stopwords', quiet=True)
+    nltk.download('stopwords', quiet=True, download_dir='/tmp/nltk_data' if os.environ.get('VERCEL') else None)
 try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
-    nltk.download('wordnet', quiet=True)
+    nltk.download('wordnet', quiet=True, download_dir='/tmp/nltk_data' if os.environ.get('VERCEL') else None)
 try:
     nltk.data.find('corpora/omw-1.4')
 except LookupError:
-    nltk.download('omw-1.4', quiet=True)
+    nltk.download('omw-1.4', quiet=True, download_dir='/tmp/nltk_data' if os.environ.get('VERCEL') else None)
 
 class TextPreprocessor:
     def __init__(self):

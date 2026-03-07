@@ -9,9 +9,11 @@ __pycache__/
 .vscode/
 .idea/
 
-# Large Datasets & Models (Exceeding GitHub 100MB limit)
+# Large Datasets (Exceeding GitHub 100MB limit)
 spam.csv
-spam_model.pkl
-vectorizer.pkl
 *.csv
 *.zip
+
+# Models are included now for Vercel deployment (under 100MB)
+# spam_model.pkl
+# vectorizer.pkl
