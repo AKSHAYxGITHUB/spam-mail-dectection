@@ -54,6 +54,10 @@ def main():
     pipeline.evaluate(X_test_vec, y_test)
     pipeline.save_artifacts()
     
+    # Export to pure Python for Vercel (Zero Dependency Inference)
+    pipeline.export_to_code('model_code.py')
+    pipeline.save_vectorizer_to_json('vectorizer.json')
+    
     print("\n=== Pipeline Complete ===")
 
 if __name__ == '__main__':

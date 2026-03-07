@@ -1,20 +1,60 @@
 from flask import Flask, render_template, request, jsonify
-import joblib
 import json
-import numpy as np
+import math
 import re
 from preprocessing import TextPreprocessor
+import model_code
 
 app = Flask(__name__)
 
+class SimpleVectorizer:
+    """Manual TF-IDF Vectorizer to avoid scikit-learn dependency."""
+    def __init__(self, json_path):
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+        self.vocabulary = data['vocabulary']
+        self.idf = data['idf']
+        self.ngram_range = data['params']['ngram_range']
+        self.feature_names = sorted(self.vocabulary.keys(), key=lambda x: self.vocabulary[x])
+        
+    def transform(self, text):
+        # Tokenize
+        tokens = re.findall(r'\b\w+\b', text.lower())
+        
+        # Add n-grams
+        if self.ngram_range[1] > 1:
+            tokens_full = list(tokens)
+            for n in range(2, self.ngram_range[1] + 1):
+                for i in range(len(tokens) - n + 1):
+                    tokens_full.append(" ".join(tokens[i:i+n]))
+            tokens = tokens_full
+            
+        # Count frequencies (TF)
+        tf = [0.0] * len(self.vocabulary)
+        for t in tokens:
+            if t in self.vocabulary:
+                tf[self.vocabulary[t]] += 1
+        
+        # Multiply by IDF
+        tfidf = [tf[i] * self.idf[i] for i in range(len(tf))]
+        
+        # Normalize (L2)
+        norm = math.sqrt(sum(x*x for x in tfidf))
+        if norm > 0:
+            tfidf = [x / norm for x in tfidf]
+            
+        return tfidf
+
+    def get_feature_names_out(self):
+        return self.feature_names
+
 # Load models
 try:
-    model = joblib.load('spam_model.pkl')
-    vectorizer = joblib.load('vectorizer.pkl')
-    print("Model and vectorizer loaded successfully.")
+    vectorizer = SimpleVectorizer('vectorizer.json')
+    print("Zero-Dependency Vectorizer loaded. Model using code-based inference.")
 except Exception as e:
-    print(f"Warning: Could not load model or vectorizer: {e}")
-    model, vectorizer = None, None
+    print(f"Warning: Could not load vectorizer: {e}")
+    vectorizer = None
 
 preprocessor = TextPreprocessor()
 
@@ -23,12 +63,11 @@ def get_word_importance(text, vectorizer, max_words=5):
     if not vectorizer:
         return []
     try:
-        vec = vectorizer.transform([text])
+        tfidf_scores = vectorizer.transform(text)
         feature_names = vectorizer.get_feature_names_out()
-        tfidf_scores = vec.toarray()[0]
         
         # Get indices of top scores
-        top_indices = np.argsort(tfidf_scores)[::-1]
+        top_indices = sorted(range(len(tfidf_scores)), key=lambda i: tfidf_scores[i], reverse=True)
         top_words = []
         for idx in top_indices:
             if tfidf_scores[idx] > 0 and len(top_words) < max_words:
@@ -64,20 +103,19 @@ def index():
     if not email_content:
         return render_template('index.html', result={"error": "Please enter an email."})
 
-    if model is None or vectorizer is None:
-        return render_template('index.html', result={"error": "Model not loaded. Please rain the model first."})
+    if vectorizer is None:
+        return render_template('index.html', result={"error": "Model (vectorizer) not loaded. Please train the model first."})
 
     # Preprocess text
     cleaned_text = preprocessor.clean_text(email_content)
     
     # Vectorize
-    vec_text = vectorizer.transform([cleaned_text]).toarray()
+    vec_text = vectorizer.transform(cleaned_text)
     
-    # Predict
-    prediction = int(model.predict(vec_text)[0])
-    probabilities = model.predict_proba(vec_text)[0]
-    spam_prob = float(probabilities[1])
-    ham_prob = float(probabilities[0])
+    # Predict using Zero-Dependency model code
+    spam_prob = float(model_code.score(vec_text))
+    ham_prob = 1.0 - spam_prob
+    prediction = 1 if spam_prob >= 0.5 else 0
 
     # Word importance
     top_words = get_word_importance(cleaned_text, vectorizer)
