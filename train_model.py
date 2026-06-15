@@ -1,6 +1,5 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from imblearn.over_sampling import SMOTE
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -36,26 +35,23 @@ def main():
     print("\n[3/5] Extracting features (TF-IDF)...")
     pipeline = ModelPipeline(representation='tfidf')
     X_train_vec, X_test_vec = pipeline.build_features(X_train_raw, X_test)
-    
-    # Handle Class Imbalance using SMOTE
-    print(f"Original Training Class Distribution: {pd.Series(y_train).value_counts().to_dict()}")
-    print("Applying SMOTE to balance classes...")
-    smote = SMOTE(random_state=42)
-    X_train_resampled, y_train_resampled = smote.fit_resample(X_train_vec, y_train)
-    print(f"Resampled Training Class Distribution: {pd.Series(y_train_resampled).value_counts().to_dict()}")
-    
+
+    # Dataset is already roughly balanced (~52% ham / 48% spam), so no
+    # resampling is needed.
+    print(f"Training Class Distribution: {pd.Series(y_train).value_counts().to_dict()}")
+
     # 4. Train Model
     print("\n[4/5] Training ensemble model...")
     pipeline.build_ensemble_model()
-    pipeline.train(X_train_resampled, y_train_resampled)
+    pipeline.train(X_train_vec, y_train)
     
     # 5. Evaluate and Save
     print("\n[5/5] Evaluating and Saving...")
     pipeline.evaluate(X_test_vec, y_test)
     pipeline.save_artifacts()
     
-    # Export to pure Python for Vercel (Zero Dependency Inference)
-    pipeline.export_to_code('model_code.py')
+    # Export weights for zero-dependency inference on Vercel
+    pipeline.save_models_to_json('model_params.json')
     pipeline.save_vectorizer_to_json('vectorizer.json')
     
     print("\n=== Pipeline Complete ===")

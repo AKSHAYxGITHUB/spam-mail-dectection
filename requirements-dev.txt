@@ -1,0 +1,6 @@
+# Training / development dependencies (not needed at runtime).
+# Runtime needs only the packages in requirements.txt.
+pandas
+numpy
+scikit-learn
+nltk
